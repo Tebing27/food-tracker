@@ -2,10 +2,16 @@ import db from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+interface RouteContext {
+  params: {
+    id: string;
+  };
+}
+
 // GET handler
 export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
+  _request: Request,
+  { params }: RouteContext
 ) {
   try {
     const { userId } = await auth();
@@ -15,7 +21,7 @@ export async function GET(
 
     const record = await db.bloodSugarRecord.findUnique({
       where: {
-        id: context.params.id,
+        id: params.id,
         userId: userId,
       },
     });
@@ -27,14 +33,17 @@ export async function GET(
     return NextResponse.json(record);
   } catch (error) {
     console.error("Error fetching record:", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 
 // PUT handler
 export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: RouteContext
 ) {
   try {
     const { userId } = await auth();
@@ -46,7 +55,7 @@ export async function PUT(
 
     const updatedRecord = await db.bloodSugarRecord.update({
       where: {
-        id: context.params.id,
+        id: params.id,
         userId: userId,
       },
       data: {
@@ -67,8 +76,8 @@ export async function PUT(
 
 // DELETE handler
 export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
+  _request: Request,
+  { params }: RouteContext
 ) {
   try {
     const { userId } = await auth();
@@ -78,7 +87,7 @@ export async function DELETE(
 
     await db.bloodSugarRecord.delete({
       where: {
-        id: context.params.id,
+        id: params.id,
         userId: userId,
       },
     });
@@ -86,6 +95,9 @@ export async function DELETE(
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("Error deleting record:", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 } 

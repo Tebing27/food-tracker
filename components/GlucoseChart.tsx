@@ -1,68 +1,92 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import Chart from 'chart.js/auto'
-import { BloodSugarRecord } from '@/types'
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface BloodSugarRecord {
+  id: string;
+  bloodSugar: number;
+  date: string;
+  userId: string;
+}
 
 interface GlucoseChartProps {
   data: BloodSugarRecord[];
 }
 
 export function GlucoseChart({ data }: GlucoseChartProps) {
-  const chartRef = useRef<HTMLCanvasElement | null>(null)
-  const chartInstance = useRef<Chart | null>(null)
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Belum ada data untuk ditampilkan
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('/api/entries')
-      const entries = await response.json()
+  const chartData = {
+    labels: data.map(record => new Date(record.date).toLocaleDateString('id-ID')),
+    datasets: [
+      {
+        label: 'Gula Darah (mg/dL)',
+        data: data.map(record => record.bloodSugar),
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        tension: 0.3
+      }
+    ]
+  };
 
-      if (chartRef.current) {
-        const ctx = chartRef.current.getContext('2d')
-        if (ctx) {
-          if (chartInstance.current) {
-            chartInstance.current.destroy()
-          }
-
-          chartInstance.current = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: entries.map((entry: any) => entry.date.split('T')[0]),
-              datasets: [
-                {
-                  label: 'Glucose Level',
-                  data: entries.map((entry: any) => entry.glucose),
-                  borderColor: 'rgb(75, 192, 192)',
-                  tension: 0.1,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Glucose (mg/dL)',
-                  },
-                },
-              },
-            },
-          })
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'mg/dL'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Tanggal'
         }
       }
     }
+  };
 
-    fetchData()
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy()
-      }
-    }
-  }, [])
-
-  return <canvas ref={chartRef} />
+  return (
+    <div className="w-full h-full">
+      <Line options={options} data={chartData} />
+    </div>
+  );
 }
 

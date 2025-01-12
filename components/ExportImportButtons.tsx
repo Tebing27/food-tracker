@@ -1,206 +1,109 @@
 "use client";
 
-import React from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileSpreadsheet, FileText } from "lucide-react";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import { BloodSugarRecord, FoodType, Condition } from "@/types";
+import { Input } from "@/components/ui/input";
+import { BloodSugarRecord } from "@/types";
 
-interface ExportImportButtonsProps {
-  data: BloodSugarRecord[];
-  onImport: (data: BloodSugarRecord[]) => void;
-}
+export function ExportImportButtons() {
+  const [isImporting, setIsImporting] = useState(false);
 
-export function ExportImportButtons({ data, onImport }: ExportImportButtonsProps) {
-  const formatCondition = (condition: string) => {
-    switch (condition) {
-      case 'normal': return 'Sewaktu';
-      case 'fasting': return 'Puasa';
-      case 'after-meal': return 'Setelah Makan';
-      case 'before-sleep': return 'Sebelum Tidur';
-      default: return condition;
+  const exportData = async () => {
+    try {
+      const response = await fetch('/api/blood-sugar');
+      const data: BloodSugarRecord[] = await response.json();
+
+      // Format data untuk CSV
+      const csvContent = [
+        // Header
+        ['Tanggal', 'Gula Darah (mg/dL)', 'Catatan'].join(','),
+        // Data rows
+        ...data.map(record => [
+          new Date(record.date).toLocaleDateString('id-ID'),
+          record.bloodSugar,
+          record.notes || ''
+        ].join(','))
+      ].join('\n');
+
+      // Buat dan download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `gula-darah-export-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Gagal mengekspor data');
     }
   };
 
-  const formatType = (type: string) => {
-    return type === 'food' ? 'Makanan' : 'Minuman';
-  };
+  const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
 
-  const getStatus = (value: number, age: string) => {
-    const ageNum = parseInt(age);
-    if (ageNum < 6) {
-      if (value < 100) return "Rendah";
-      if (value > 200) return "Tinggi";
-      return "Normal";
-    } else if (ageNum <= 12) {
-      if (value < 70) return "Rendah";
-      if (value > 150) return "Tinggi";
-      return "Normal";
-    } else {
-      if (value < 70) return "Rendah";
-      if (value > 130) return "Tinggi";
-      return "Normal";
-    }
-  };
-
-  const exportToExcel = () => {
-    // Format data untuk excel
-    const formattedData = data.map(record => ({
-      'Tanggal': record.date,
-      'Waktu': record.time,
-      'Gula Darah (mg/dL)': record.bloodSugar,
-      'Status': getStatus(record.bloodSugar, record.age),
-      'Usia': record.age,
-      'Jenis': formatType(record.type),
-      'Kondisi': formatCondition(record.condition),
-      'Deskripsi': record.description
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Riwayat Gula Darah");
-    
-    // Atur lebar kolom
-    const wscols = [
-      { wch: 12 }, // Tanggal
-      { wch: 8 },  // Waktu
-      { wch: 15 }, // Gula Darah
-      { wch: 10 }, // Status
-      { wch: 6 },  // Usia
-      { wch: 10 }, // Jenis
-      { wch: 15 }, // Kondisi
-      { wch: 30 }, // Deskripsi
-    ];
-    worksheet['!cols'] = wscols;
-
-    XLSX.writeFile(workbook, "riwayat-gula-darah.xlsx");
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(16);
-    doc.text("Riwayat Data Gula Darah", 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Diekspor pada: ${new Date().toLocaleString('id-ID')}`, 14, 25);
-
-    // Tabel
-    const tableColumn = [
-      "Tanggal", 
-      "Waktu", 
-      "Gula Darah", 
-      "Status",
-      "Usia", 
-      "Jenis", 
-      "Kondisi", 
-      "Deskripsi"
-    ];
-    
-    const tableRows = data.map(record => [
-      record.date,
-      record.time,
-      `${record.bloodSugar} mg/dL`,
-      getStatus(record.bloodSugar, record.age),
-      record.age,
-      formatType(record.type),
-      formatCondition(record.condition),
-      record.description
-    ]);
-
-    (doc as any).autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      styles: { fontSize: 8, cellPadding: 1.5 },
-      headStyles: { fillColor: [76, 175, 80] },
-      columnStyles: {
-        0: { cellWidth: 20 }, // Tanggal
-        1: { cellWidth: 15 }, // Waktu
-        2: { cellWidth: 20 }, // Gula Darah
-        3: { cellWidth: 15 }, // Status
-        4: { cellWidth: 10 }, // Usia
-        5: { cellWidth: 15 }, // Jenis
-        6: { cellWidth: 20 }, // Kondisi
-        7: { cellWidth: 'auto' } // Deskripsi
-      },
-      theme: 'grid'
-    });
-
-    doc.save("riwayat-gula-darah.pdf");
-  };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+    setIsImporting(true);
+    const file = event.target.files[0];
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      
-      // Format data kembali ke struktur yang diharapkan
-      const formattedData: BloodSugarRecord[] = jsonData.map((item: any) => ({
-        id: crypto.randomUUID(), // Generate ID baru
-        date: item['Tanggal'],
-        time: item['Waktu'],
-        bloodSugar: parseFloat(item['Gula Darah (mg/dL)']),
-        value: parseFloat(item['Gula Darah (mg/dL)']), // Tambahkan value yang sama dengan bloodSugar
-        age: item['Usia'].toString(),
-        type: item['Jenis'] === 'Makanan' ? FoodType.Food : FoodType.Drink,
-        condition: item['Kondisi'] === 'Sewaktu' ? Condition.Normal :
-                  item['Kondisi'] === 'Puasa' ? Condition.Fasting :
-                  item['Kondisi'] === 'Setelah Makan' ? Condition.AfterMeal : 
-                  Condition.BeforeSleep,
-        description: item['Deskripsi'] || ''
-      }));
-      
-      onImport(formattedData);
+
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const rows = text.split('\n').slice(1); // Skip header row
+
+        const records = rows.map(row => {
+          const [dateStr, bloodSugarStr, notes] = row.split(',');
+          return {
+            date: new Date(dateStr),
+            bloodSugar: parseFloat(bloodSugarStr),
+            notes: notes?.trim() || null
+          };
+        });
+
+        // Kirim data ke API
+        const response = await fetch('/api/blood-sugar/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records })
+        });
+
+        if (!response.ok) throw new Error('Import gagal');
+
+        alert('Data berhasil diimpor');
+        window.location.reload();
+      } catch (error) {
+        console.error('Error importing data:', error);
+        alert('Gagal mengimpor data');
+      } finally {
+        setIsImporting(false);
+      }
     };
-    reader.readAsBinaryString(file);
+
+    reader.readAsText(file);
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-4">
       <Button
+        onClick={exportData}
         variant="outline"
-        size="sm"
-        className="flex items-center gap-2"
-        onClick={exportToExcel}
       >
-        <FileSpreadsheet className="h-4 w-4" />
-        Excel
-      </Button>
-      
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2"
-        onClick={exportToPDF}
-      >
-        <FileText className="h-4 w-4" />
-        PDF
+        Export CSV
       </Button>
       
       <div className="relative">
-        <input
+        <Input
           type="file"
-          accept=".xlsx,.xls"
-          onChange={handleImport}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          accept=".csv"
+          onChange={importData}
+          disabled={isImporting}
+          className="hidden"
+          id="import-input"
         />
         <Button
+          onClick={() => document.getElementById('import-input')?.click()}
           variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
+          disabled={isImporting}
         >
-          <Upload className="h-4 w-4" />
-          Import
+          {isImporting ? 'Mengimpor...' : 'Import CSV'}
         </Button>
       </div>
     </div>

@@ -1,41 +1,28 @@
-import prisma from "@/lib/db";
+import db from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { BloodSugarRecord } from "@/types";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const body = await req.json();
-    const { records } = body as { records: BloodSugarRecord[] };
+    const { records } = await request.json();
 
-    // Simpan semua record yang diimpor
-    for (const record of records) {
-      await prisma.bloodSugarRecord.create({
-        data: {
-          ...record,
-          userId
-        }
-      });
-    }
-
-    // Ambil data terbaru
-    const updatedRecords = await prisma.bloodSugarRecord.findMany({
-      where: {
-        userId
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+    const importedRecords = await db.bloodSugarRecord.createMany({
+      data: records.map((record: any) => ({
+        bloodSugar: parseFloat(record.bloodSugar),
+        date: new Date(record.date).toISOString(),
+        notes: record.notes || "",
+        userId,
+      })),
     });
 
-    return NextResponse.json(updatedRecords);
+    return NextResponse.json(importedRecords);
   } catch (error) {
-    console.error("[BLOOD_SUGAR_IMPORT]", error);
+    console.error("Error importing records:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 } 

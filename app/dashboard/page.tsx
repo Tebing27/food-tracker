@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { GlucoseChart } from "@/components/GlucoseChart";
+import { BloodSugarRecord } from "@/types";
 
 export default function DashboardPage() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<BloodSugarRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

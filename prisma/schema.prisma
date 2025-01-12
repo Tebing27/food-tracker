@@ -8,24 +8,22 @@ datasource db {
 }
 
 model User {
-  id            String            @id
-  email         String           @unique
+  id                String            @id
+  email             String            @unique
   bloodSugarRecords BloodSugarRecord[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model BloodSugarRecord {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  date        String
-  time        String
-  bloodSugar  Float
-  age         String
-  type        String
-  description String
-  condition   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  bloodSugar Float
+  date       DateTime
+  notes      String?  @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 } 

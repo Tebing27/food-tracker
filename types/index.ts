@@ -10,15 +10,20 @@ export enum FoodType {
   Drink = 'drink'
 }
 
-export type BloodSugarRecord = {
+export interface BloodSugarRecord {
   id: string;
-  value: number;
+  userId: string;
   bloodSugar: number;
-  date: string;
-  time: string;
-  age: string;
-  type: FoodType;
-  description: string;
-  condition: Condition;
-  userId?: string;
-}; 
+  date: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  bloodSugarRecords: BloodSugarRecord[];
+  createdAt: Date;
+  updatedAt: Date;
+} 

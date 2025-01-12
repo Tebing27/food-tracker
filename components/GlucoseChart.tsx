@@ -1,6 +1,7 @@
 'use client'
 
 import { Line } from "react-chartjs-2";
+import { BloodSugarRecord } from "@/types";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,13 +22,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-interface BloodSugarRecord {
-  id: string;
-  bloodSugar: number;
-  date: string;
-  userId: string;
-}
 
 interface GlucoseChartProps {
   data: BloodSugarRecord[];

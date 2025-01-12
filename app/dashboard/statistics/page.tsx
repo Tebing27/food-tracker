@@ -116,10 +116,10 @@ const StatisticsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="pt-28 max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+      <div className="pt-24 max-w-4xl mx-auto p-4 md:p-8 space-y-8 pt-32">
         {/* Trend Waktu */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-6 pt-5">Trend Berdasarkan Waktu</h2>
+          <h2 className="text-xl font-semibold mb-6">Trend Berdasarkan Waktu</h2>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsLineChart

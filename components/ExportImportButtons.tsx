@@ -2,39 +2,18 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Upload, FileSpreadsheet, FileText } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { BloodSugarRecord, FoodType, Condition } from "@/types";
 
-interface BloodSugarRecord {
-  id: string;
-  date: string;
-  time: string;
-  bloodSugar: number;
-  age: string;
-  type: string;
-  description: string;
-  condition: string;
-}
-
-// Interface baru untuk data import
-interface ImportBloodSugarData {
-  date: string;
-  time: string;
-  bloodSugar: number;
-  age: string;
-  type: string;
-  description: string;
-  condition: string;
-}
-
-interface ExportImportProps {
+interface ExportImportButtonsProps {
   data: BloodSugarRecord[];
-  onImport: (data: ImportBloodSugarData[]) => void;
+  onImport: (data: BloodSugarRecord[]) => void;
 }
 
-export function ExportImportButtons({ data, onImport }: ExportImportProps) {
+export function ExportImportButtons({ data, onImport }: ExportImportButtonsProps) {
   const formatCondition = (condition: string) => {
     switch (condition) {
       case 'normal': return 'Sewaktu';
@@ -166,15 +145,18 @@ export function ExportImportButtons({ data, onImport }: ExportImportProps) {
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
       // Format data kembali ke struktur yang diharapkan
-      const formattedData: ImportBloodSugarData[] = jsonData.map((item: any) => ({
+      const formattedData: BloodSugarRecord[] = jsonData.map((item: any) => ({
+        id: crypto.randomUUID(), // Generate ID baru
         date: item['Tanggal'],
         time: item['Waktu'],
         bloodSugar: parseFloat(item['Gula Darah (mg/dL)']),
+        value: parseFloat(item['Gula Darah (mg/dL)']), // Tambahkan value yang sama dengan bloodSugar
         age: item['Usia'].toString(),
-        type: item['Jenis'] === 'Makanan' ? 'food' : 'drink',
-        condition: item['Kondisi'] === 'Sewaktu' ? 'normal' :
-                  item['Kondisi'] === 'Puasa' ? 'fasting' :
-                  item['Kondisi'] === 'Setelah Makan' ? 'after-meal' : 'before-sleep',
+        type: item['Jenis'] === 'Makanan' ? FoodType.Food : FoodType.Drink,
+        condition: item['Kondisi'] === 'Sewaktu' ? Condition.Normal :
+                  item['Kondisi'] === 'Puasa' ? Condition.Fasting :
+                  item['Kondisi'] === 'Setelah Makan' ? Condition.AfterMeal : 
+                  Condition.BeforeSleep,
         description: item['Deskripsi'] || ''
       }));
       

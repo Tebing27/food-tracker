@@ -4,8 +4,9 @@ import { auth } from '@clerk/nextjs/server'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -17,17 +18,15 @@ export async function DELETE(
 
     const record = await prisma.bloodSugarRecord.delete({
       where: {
-        id: params.id,
+        id: id,
         userId: userId
       }
     })
 
     return NextResponse.json(record)
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error deleting record' }, 
-      { status: 500 }
-    )
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ message: 'Error occurred' }, { status: 500 });
   }
 }
 
@@ -57,10 +56,8 @@ export async function PUT(
     })
 
     return NextResponse.json(record)
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Error updating record' }, 
-      { status: 500 }
-    )
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ message: 'Error occurred' }, { status: 500 });
   }
 } 

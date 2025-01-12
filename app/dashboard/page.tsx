@@ -14,20 +14,10 @@ import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, MoreVertical, Edit, Trash } from "lucide-react";
+import { MoreVertical, Edit, Trash } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { ExportImportButtons } from "@/components/ExportImportButtons";
-
-interface BloodSugarRecord {
-  id: string;
-  date: string;
-  time: string;
-  bloodSugar: number;
-  age: string;
-  type: string;
-  description: string;
-  condition: string;
-}
+import { BloodSugarRecord, Condition, FoodType } from "@/types";
 
 export default function Dashboard() {
   const { userId } = useAuth();
@@ -45,8 +35,8 @@ export default function Dashboard() {
 
   const [records, setRecords] = useState<BloodSugarRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterCondition, setFilterCondition] = useState<string>("all");
+  const [filterType, _setFilterType] = useState<string>('');
+  const [filterCondition, _setFilterCondition] = useState<string>('');
   const [editingRecord, setEditingRecord] = useState<BloodSugarRecord | null>(null);
   const [editFormData, setEditFormData] = useState({
     date: "",
@@ -239,8 +229,14 @@ export default function Dashboard() {
     <div>
       <Navbar />
       <main className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 pt-20">
+        <div className="container mx-auto px-4 pt-28">
           <div className="max-w-4xl mx-auto space-y-8">
+            <ExportImportButtons 
+              data={records} 
+              onImport={(importedData) => {
+                setRecords(prev => [...prev, ...importedData]);
+              }}
+            />
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-6 text-green-400">RiseBar Tracker Gula Darah</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -343,10 +339,6 @@ export default function Dashboard() {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Riwayat Gula Darah</h2>
                   <div className="flex items-center gap-4">
-                    <ExportImportButtons 
-                      data={records}
-                      onImport={handleImport}
-                    />
                     <Input
                       placeholder="Cari..."
                       value={searchTerm}
@@ -376,14 +368,8 @@ export default function Dashboard() {
                           <TableCell>{record.date}</TableCell>
                           <TableCell>{record.time}</TableCell>
                           <TableCell>{record.bloodSugar} mg/dL</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {record.type === 'food' ? 'Makanan' : 'Minuman'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {record.description}
-                          </TableCell>
+                          <TableCell>{record.age} tahun</TableCell>
+                          <TableCell>{record.type === 'food' ? 'Makanan' : 'Minuman'}</TableCell>
                           <TableCell>
                             <Badge variant="secondary">
                               {record.condition === 'normal' && 'Sewaktu'}
@@ -394,7 +380,7 @@ export default function Dashboard() {
                           </TableCell>
                           <TableCell>
                             <Badge 
-                              variant={getStatus(record.bloodSugar, record.age) === "Normal" ? "default" : "destructive"}
+                              variant={getStatus(record.value, record.condition) === "Normal" ? "default" : "destructive"}
                             >
                               {getStatus(record.bloodSugar, record.age)}
                             </Badge>

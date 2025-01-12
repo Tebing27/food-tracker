@@ -2,11 +2,20 @@
 
 import { useEffect, useRef } from 'react'
 import Chart from 'chart.js/auto'
-import prisma from '../lib/prisma'
+import { BloodSugarRecord, FoodType, Condition } from "@/types";
 
-export function GlucoseChart() {
+interface GlucoseChartProps {
+  data: BloodSugarRecord[];
+}
+
+export function GlucoseChart({ data }: GlucoseChartProps) {
   const chartRef = useRef<HTMLCanvasElement | null>(null)
   const chartInstance = useRef<Chart | null>(null)
+
+  const chartData = data.map(record => ({
+    date: record.date,
+    value: record.bloodSugar
+  }));
 
   useEffect(() => {
     const fetchData = async () => {

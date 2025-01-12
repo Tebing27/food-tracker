@@ -1,16 +1,7 @@
-import { db } from "@/lib/db";
+import prisma from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
-interface ImportBloodSugarData {
-  date: string;
-  time: string;
-  bloodSugar: number;
-  age: string;
-  type: string;
-  description: string;
-  condition: string;
-}
+import { BloodSugarRecord } from "@/types";
 
 export async function POST(req: Request) {
   try {
@@ -20,11 +11,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { records } = body as { records: ImportBloodSugarData[] };
+    const { records } = body as { records: BloodSugarRecord[] };
 
     // Simpan semua record yang diimpor
     for (const record of records) {
-      await db.bloodSugarRecord.create({
+      await prisma.bloodSugarRecord.create({
         data: {
           ...record,
           userId
@@ -33,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     // Ambil data terbaru
-    const updatedRecords = await db.bloodSugarRecord.findMany({
+    const updatedRecords = await prisma.bloodSugarRecord.findMany({
       where: {
         userId
       },

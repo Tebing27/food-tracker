@@ -7,9 +7,9 @@ import { GlucoseChart } from "@/components/GlucoseChart";
 import { BloodSugarRecord } from "@/types";
 
 export default function SummaryPage() {
-  const [data, setData] = useState<BloodSugarRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data] = useState<BloodSugarRecord[]>([]);
+  const [loading] = useState(true);
+  const [error] = useState<string | null>(null);
   const [stats, setStats] = useState({
     average: 0,
     highest: 0,

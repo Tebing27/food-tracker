@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Chart from 'chart.js/auto'
-import { BloodSugarRecord, FoodType, Condition } from "@/types";
+import { BloodSugarRecord } from '@/types'
 
 interface GlucoseChartProps {
   data: BloodSugarRecord[];
@@ -11,11 +11,6 @@ interface GlucoseChartProps {
 export function GlucoseChart({ data }: GlucoseChartProps) {
   const chartRef = useRef<HTMLCanvasElement | null>(null)
   const chartInstance = useRef<Chart | null>(null)
-
-  const chartData = data.map(record => ({
-    date: record.date,
-    value: record.bloodSugar
-  }));
 
   useEffect(() => {
     const fetchData = async () => {

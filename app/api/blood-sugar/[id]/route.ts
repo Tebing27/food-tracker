@@ -1,11 +1,11 @@
-import db  from "@/lib/db";
+import db from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET handler
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -15,7 +15,7 @@ export async function GET(
 
     const record = await db.bloodSugarRecord.findUnique({
       where: {
-        id: params.id,
+        id: context.params.id,
         userId: userId,
       },
     });
@@ -34,7 +34,7 @@ export async function GET(
 // PUT handler
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -46,13 +46,12 @@ export async function PUT(
 
     const updatedRecord = await db.bloodSugarRecord.update({
       where: {
-        id: params.id,
+        id: context.params.id,
         userId: userId,
       },
       data: {
         bloodSugar: parseFloat(body.bloodSugar),
-        date: body.date,
-        notes: body.notes,
+        date: new Date(body.date).toISOString(),
       },
     });
 
@@ -66,7 +65,7 @@ export async function PUT(
 // DELETE handler
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -76,7 +75,7 @@ export async function DELETE(
 
     await db.bloodSugarRecord.delete({
       where: {
-        id: params.id,
+        id: context.params.id,
         userId: userId,
       },
     });

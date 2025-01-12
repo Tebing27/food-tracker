@@ -15,7 +15,6 @@ export interface BloodSugarRecord {
   userId: string;
   bloodSugar: number;
   date: Date;
-  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }

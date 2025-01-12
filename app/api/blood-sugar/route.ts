@@ -19,10 +19,19 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json(bloodSugarRecords);
+    return NextResponse.json(bloodSugarRecords || []);
     
   } catch (error) {
-    console.error('Error fetching blood sugar data:', error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error('Error fetching blood sugar data:', error instanceof Error ? error.message : 'Unknown error');
+    
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }), 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
   }
 } 

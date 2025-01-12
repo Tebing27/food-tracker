@@ -58,7 +58,10 @@ export async function PUT(
     return NextResponse.json(updatedRecord);
   } catch (error) {
     console.error("Error updating record:", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 

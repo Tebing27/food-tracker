@@ -21,7 +21,6 @@ model BloodSugarRecord {
   user       User     @relation(fields: [userId], references: [id])
   bloodSugar Float
   date       DateTime
-  notes      String?  @default("")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

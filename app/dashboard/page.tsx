@@ -9,15 +9,22 @@ import { BloodSugarRecord } from "@/types";
 export default function DashboardPage() {
   const [data, setData] = useState<BloodSugarRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/blood-sugar');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
         const result = await response.json();
-        setData(result);
+        setData(Array.isArray(result) ? result : []);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError(error instanceof Error ? error.message : 'Gagal memuat data');
+        setData([]);
       } finally {
         setIsLoading(false);
       }
@@ -36,6 +43,8 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold mb-6">Ringkasan Gula Darah</h1>
               {isLoading ? (
                 <p>Memuat data...</p>
+              ) : error ? (
+                <p className="text-red-500">{error}</p>
               ) : data.length === 0 ? (
                 <p>Data belum tersedia.</p>
               ) : (
